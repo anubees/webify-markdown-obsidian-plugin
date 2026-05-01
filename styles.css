@@ -1,0 +1,137 @@
+/* Obsidian-side UI (settings tab, modals, controls). The LAN website uses bundled CSS from src/css/style.ts. */
+:root {
+  --lws-bg: #ffffff;
+  --lws-text: #1f2937;
+  --lws-muted: #6b7280;
+  --lws-border: #e5e7eb;
+  --lws-panel: #f9fafb;
+  --lws-link: #2563eb;
+  --lws-code-bg: #f3f4f6;
+}
+
+body.theme-dark {
+  --lws-bg: #0f172a;
+  --lws-text: #e2e8f0;
+  --lws-muted: #94a3b8;
+  --lws-border: #1e293b;
+  --lws-panel: #111827;
+  --lws-link: #60a5fa;
+  --lws-code-bg: #1f2937;
+}
+
+body {
+  margin: 0;
+  background: var(--lws-bg);
+  color: var(--lws-text);
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+a {
+  color: var(--lws-link);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+.lws-app {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  min-height: 100vh;
+}
+
+.lws-sidebar {
+  border-right: 1px solid var(--lws-border);
+  padding: 12px;
+  background: var(--lws-panel);
+  overflow: auto;
+}
+
+.lws-main {
+  padding: 20px;
+  overflow: auto;
+}
+
+.lws-toolbar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.lws-toolbar input {
+  flex: 1;
+  min-width: 180px;
+  border: 1px solid var(--lws-border);
+  background: var(--lws-bg);
+  color: var(--lws-text);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.lws-toolbar button {
+  border: 1px solid var(--lws-border);
+  background: var(--lws-panel);
+  color: var(--lws-text);
+  border-radius: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+}
+
+.lws-meta {
+  border: 1px solid var(--lws-border);
+  background: var(--lws-panel);
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 14px;
+}
+
+.lws-content img,
+.lws-content video {
+  max-width: 100%;
+}
+
+.lws-content pre {
+  padding: 12px;
+  overflow: auto;
+  border-radius: 8px;
+  background: var(--lws-code-bg);
+}
+
+.lws-content code {
+  background: var(--lws-code-bg);
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+.lws-tree ul {
+  list-style: none;
+  margin: 0;
+  padding-left: 12px;
+}
+
+.lws-tree details > summary {
+  cursor: pointer;
+}
+
+.lws-search-results {
+  margin-top: 10px;
+  border-top: 1px solid var(--lws-border);
+  padding-top: 8px;
+}
+
+.lws-empty {
+  color: var(--lws-muted);
+}
+
+@media (max-width: 900px) {
+  .lws-app {
+    grid-template-columns: 1fr;
+  }
+
+  .lws-sidebar {
+    border-right: none;
+    border-bottom: 1px solid var(--lws-border);
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "id": "webify-markdown-lan-server",
+  "name": "Webify Markdown LAN Server",
+  "version": "1.0.0",
+  "minAppVersion": "1.5.0",
+  "description": "Serve your vault or a subfolder over your local network as a read-only website.",
+  "author": "Webify Markdown LAN Server Contributors",
+  "authorUrl": "https://github.com/anubees/webify-markdown-lan-server",
+  "isDesktopOnly": true
+}

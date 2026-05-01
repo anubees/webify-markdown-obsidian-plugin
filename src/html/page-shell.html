@@ -1,0 +1,34 @@
+<!-- Full LAN browse document: sidebar, main column, injected scripts/styles placeholders for templates.ts -->
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{TITLE}} - Webify Markdown LAN Server</title>
+  <link rel="stylesheet" href="/_static/style.css" />
+</head>
+<body>
+  <div id="lws-app" class="lws-app">
+    <aside id="lws-sidebar" class="lws-sidebar">
+      <h2>Ethan Hunt Vault</h2>
+      <div class="lws-scope"><strong>Scope:</strong> {{SERVED_ROOT_NAME}}</div>
+      {{SCOPE_PATH_BLOCK}}
+      {{FAVORITES_HTML}}
+      {{TREE_HTML}}
+    </aside>
+    <div id="lws-resizer" class="lws-resizer" role="separator" aria-orientation="vertical" aria-label="Resize sidebar"></div>
+    <main class="lws-main">
+      <div class="lws-toolbar">
+        <input id="lws-search-input" type="search" placeholder="Search notes..." />
+        {{FAVORITE_TOGGLE_BLOCK}}
+        <button id="lws-theme-toggle" type="button">☀ Light mode</button>
+        <button id="lws-copy-link" type="button">Copy link</button>
+      </div>
+      <div id="lws-search-results" class="lws-search-results"></div>
+      {{CONTENT_HTML}}
+    </main>
+  </div>
+  <script>{{THEME_SCRIPT}}</script>
+  <script>{{CLIENT_SCRIPT}}</script>
+</body>
+</html>

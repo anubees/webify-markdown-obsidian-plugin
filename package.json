@@ -1,0 +1,30 @@
+{
+  "name": "obsidian-webify-markdown-lan-server",
+  "version": "1.0.0",
+  "description": "Obsidian plugin that serves vault notes over LAN",
+  "main": "main.js",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "node esbuild.config.mjs production"
+  },
+  "keywords": [
+    "obsidian",
+    "plugin",
+    "markdown",
+    "webserver"
+  ],
+  "author": "Webify Markdown LAN Server Contributors",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^22.15.11",
+    "builtin-modules": "^4.0.0",
+    "esbuild": "^0.25.4",
+    "obsidian": "latest",
+    "tslib": "^2.8.1",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "highlight.js": "^11.11.1",
+    "marked": "^15.0.12"
+  }
+}

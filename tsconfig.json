@@ -1,0 +1,26 @@
+{
+  // Typecheck plugin sources only; esbuild bundles without emitting from this config.
+  "compilerOptions": {
+    "baseUrl": ".",
+    "inlineSourceMap": true,
+    "inlineSources": true,
+    "module": "ESNext",
+    "target": "ES2021",
+    "allowJs": false,
+    "noImplicitAny": true,
+    "moduleResolution": "node",
+    "importHelpers": true,
+    "strict": true,
+    "lib": [
+      "DOM",
+      "ES2021"
+    ],
+    "types": [
+      "node"
+    ]
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.d.ts"
+  ]
+}
