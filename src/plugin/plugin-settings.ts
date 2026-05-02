@@ -10,6 +10,7 @@ function isThemeOption(value: string): value is ThemeOption {
 export const DEFAULT_SETTINGS: ILocalWebServerSettings = {
   port: 9000,
   bindAddress: "0.0.0.0",
+  vaultName: "",
   rootFolder: "",
   autoStart: false,
   enableBasicAuth: false,
@@ -61,6 +62,18 @@ export class LocalWebServerSettingTab extends PluginSettingTab {
           .onChange(async (value: string) => {
             if (value !== "127.0.0.1" && value !== "0.0.0.0") return;
             await this.plugin.updateSetting("bindAddress", value);
+          })
+      );
+
+    new Setting(containerEl)
+      .setName("Vault name")
+      .setDesc('Title shown in the LAN sidebar. Leave blank to use "Obsidian Vault".')
+      .addText((text) =>
+        text
+          .setPlaceholder("Obsidian Vault")
+          .setValue(this.plugin.settings.vaultName)
+          .onChange(async (value) => {
+            await this.plugin.updateSetting("vaultName", value);
           })
       );
 

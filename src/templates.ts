@@ -58,6 +58,7 @@ export function renderPageShell(data: IPageShellData): string {
       : "";
   return applyHtml(pageShellHtml.trim(), {
     TITLE: escapeHtml(data.title),
+    VAULT_TITLE: escapeHtml(data.vaultTitle),
     SERVED_ROOT_NAME: escapeHtml(data.servedRootName),
     SCOPE_PATH_BLOCK: scopePathBlock,
     FAVORITES_HTML: data.favoritesHtml,

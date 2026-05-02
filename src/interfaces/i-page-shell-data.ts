@@ -1,6 +1,8 @@
 // Placeholder bundle passed into `page-shell.html` (title, sidebars, chrome, note body slot).
 export interface IPageShellData {
   title: string;
+  /** Sidebar heading (from settings vault name, or "Obsidian Vault" when blank). */
+  vaultTitle: string;
   treeHtml: string;
   favoritesHtml: string;
   servedRootLabel: string;

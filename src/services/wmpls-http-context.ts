@@ -15,7 +15,10 @@ import { isSafeExtension } from "../utils";
 
 // #region << Functions >>
 // Shell fields repeated on every HTML page (from plugin settings).
-export type ShellChrome = Pick<IPageShellData, "servedRootLabel" | "servedRootName" | "themeMode">;
+export type ShellChrome = Pick<
+  IPageShellData,
+  "vaultTitle" | "servedRootLabel" | "servedRootName" | "themeMode"
+>;
 
 // Human-readable name for the served folder scope (last segment or "Vault root").
 function scopeName(rootFolder: string): string {
@@ -27,7 +30,9 @@ function scopeName(rootFolder: string): string {
 
 // Theme + scope labels for renderPageShell.
 export function shellChrome(options: IStartServerOptions): ShellChrome {
+  const vaultTitle = options.settings.vaultName.trim() || "Obsidian Vault";
   return {
+    vaultTitle,
     servedRootLabel: options.settings.rootFolder.trim() || "Vault root",
     servedRootName: scopeName(options.settings.rootFolder),
     themeMode: options.settings.theme

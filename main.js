@@ -51860,6 +51860,7 @@ function isThemeOption(value) {
 var DEFAULT_SETTINGS = {
   port: 9e3,
   bindAddress: "0.0.0.0",
+  vaultName: "",
   rootFolder: "",
   autoStart: false,
   enableBasicAuth: false,
@@ -51891,6 +51892,11 @@ var LocalWebServerSettingTab = class extends import_obsidian2.PluginSettingTab {
       (dropdown) => dropdown.addOption("127.0.0.1", "127.0.0.1 (localhost only)").addOption("0.0.0.0", "0.0.0.0 (LAN)").setValue(this.plugin.settings.bindAddress).onChange(async (value) => {
         if (value !== "127.0.0.1" && value !== "0.0.0.0") return;
         await this.plugin.updateSetting("bindAddress", value);
+      })
+    );
+    new import_obsidian2.Setting(containerEl).setName("Vault name").setDesc('Title shown in the LAN sidebar. Leave blank to use "Obsidian Vault".').addText(
+      (text) => text.setPlaceholder("Obsidian Vault").setValue(this.plugin.settings.vaultName).onChange(async (value) => {
+        await this.plugin.updateSetting("vaultName", value);
       })
     );
     new import_obsidian2.Setting(containerEl).setName("Root folder").setDesc("Only this folder is served on the web. Relative path in vault; empty means whole vault.").addText(
@@ -52748,7 +52754,7 @@ var not_found_default = '<!-- 404 body inserted into the normal page shell when 
 var note_article_default = '<!-- Rendered note layout: optional title block, frontmatter summary, markdown body -->\r\n<article class="lws-content">\r\n  {{TITLE_BLOCK}}\r\n  {{FRONTMATTER_HTML}}\r\n  {{NOTE_HTML}}\r\n</article>\r\n';
 
 // src/html/page-shell.html
-var page_shell_default = '<!-- Full LAN browse document: sidebar, main column, injected scripts/styles placeholders for templates.ts -->\r\n<!doctype html>\r\n<html>\r\n<head>\r\n  <meta charset="utf-8" />\r\n  <meta name="viewport" content="width=device-width, initial-scale=1" />\r\n  <title>{{TITLE}} - Webify Markdown LAN Server</title>\r\n  <link rel="stylesheet" href="/_static/style.css" />\r\n</head>\r\n<body>\r\n  <div id="lws-app" class="lws-app">\r\n    <aside id="lws-sidebar" class="lws-sidebar">\r\n      <h2>Ethan Hunt Vault</h2>\r\n      <div class="lws-scope"><strong>Scope:</strong> {{SERVED_ROOT_NAME}}</div>\r\n      {{SCOPE_PATH_BLOCK}}\r\n      {{FAVORITES_HTML}}\r\n      {{TREE_HTML}}\r\n    </aside>\r\n    <div id="lws-resizer" class="lws-resizer" role="separator" aria-orientation="vertical" aria-label="Resize sidebar"></div>\r\n    <main class="lws-main">\r\n      <div class="lws-toolbar">\r\n        <input id="lws-search-input" type="search" placeholder="Search notes..." />\r\n        {{FAVORITE_TOGGLE_BLOCK}}\r\n        <button id="lws-theme-toggle" type="button">\u2600 Light mode</button>\r\n        <button id="lws-copy-link" type="button">Copy link</button>\r\n      </div>\r\n      <div id="lws-search-results" class="lws-search-results"></div>\r\n      {{CONTENT_HTML}}\r\n    </main>\r\n  </div>\r\n  <script>{{THEME_SCRIPT}}<\/script>\r\n  <script>{{CLIENT_SCRIPT}}<\/script>\r\n</body>\r\n</html>\r\n';
+var page_shell_default = '<!-- Full LAN browse document: sidebar, main column, injected scripts/styles placeholders for templates.ts -->\r\n<!doctype html>\r\n<html>\r\n<head>\r\n  <meta charset="utf-8" />\r\n  <meta name="viewport" content="width=device-width, initial-scale=1" />\r\n  <title>{{TITLE}} - Webify Markdown LAN Server</title>\r\n  <link rel="stylesheet" href="/_static/style.css" />\r\n</head>\r\n<body>\r\n  <div id="lws-app" class="lws-app">\r\n    <aside id="lws-sidebar" class="lws-sidebar">\r\n      <h2>{{VAULT_TITLE}}</h2>\r\n      <div class="lws-scope"><strong>Scope:</strong> {{SERVED_ROOT_NAME}}</div>\r\n      {{SCOPE_PATH_BLOCK}}\r\n      {{FAVORITES_HTML}}\r\n      {{TREE_HTML}}\r\n    </aside>\r\n    <div id="lws-resizer" class="lws-resizer" role="separator" aria-orientation="vertical" aria-label="Resize sidebar"></div>\r\n    <main class="lws-main">\r\n      <div class="lws-toolbar">\r\n        <input id="lws-search-input" type="search" placeholder="Search notes..." />\r\n        {{FAVORITE_TOGGLE_BLOCK}}\r\n        <button id="lws-theme-toggle" type="button">\u2600 Light mode</button>\r\n        <button id="lws-copy-link" type="button">Copy link</button>\r\n      </div>\r\n      <div id="lws-search-results" class="lws-search-results"></div>\r\n      {{CONTENT_HTML}}\r\n    </main>\r\n  </div>\r\n  <script>{{THEME_SCRIPT}}<\/script>\r\n  <script>{{CLIENT_SCRIPT}}<\/script>\r\n</body>\r\n</html>\r\n';
 
 // src/templates.ts
 function renderFavoritesSection(favorites, activePath = "") {
@@ -52777,6 +52783,7 @@ function renderPageShell(data) {
   }) : "";
   return applyHtml(page_shell_default.trim(), {
     TITLE: escapeHtml(data.title),
+    VAULT_TITLE: escapeHtml(data.vaultTitle),
     SERVED_ROOT_NAME: escapeHtml(data.servedRootName),
     SCOPE_PATH_BLOCK: scopePathBlock,
     FAVORITES_HTML: data.favoritesHtml,
@@ -53000,7 +53007,9 @@ function scopeName(rootFolder) {
   return parts[parts.length - 1] ?? "Vault root";
 }
 function shellChrome(options2) {
+  const vaultTitle = options2.settings.vaultName.trim() || "Obsidian Vault";
   return {
+    vaultTitle,
     servedRootLabel: options2.settings.rootFolder.trim() || "Vault root",
     servedRootName: scopeName(options2.settings.rootFolder),
     themeMode: options2.settings.theme
