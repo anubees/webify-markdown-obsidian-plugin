@@ -40,6 +40,39 @@ export class LocalWebServerSettingTab extends PluginSettingTab {
       text: "Credentials are stored in plugin data and are plaintext at rest in this version of the plugin. Use only on trusted devices."
     });
 
+    // Vault name
+    new Setting(containerEl)
+    .setName("Vault name")
+    .setDesc('Title shown in the LAN sidebar. Leave blank to use "Obsidian Vault".')
+    .addText((text) =>
+      text
+        .setPlaceholder("Obsidian Vault")
+        .setValue(this.plugin.settings.vaultName)
+        .onChange(async (value) => {
+          await this.plugin.updateSetting("vaultName", value);
+        })
+    );
+
+    // Root folder - if you dont want to share entire Vault on web but only a specific folder, you can set it here.
+    new Setting(containerEl)
+      .setName("Root folder")
+      .setDesc("Only this folder is served on the web. Relative path in vault; empty means whole vault.")
+      .addText((text) =>
+        text.setValue(this.plugin.settings.rootFolder).onChange(async (value) => {
+          await this.plugin.updateSetting("rootFolder", value);
+        })
+      );
+
+    // Auto-start on launch
+    new Setting(containerEl)
+      .setName("Auto-start on launch")
+      .addToggle((toggle) =>
+        toggle.setValue(this.plugin.settings.autoStart).onChange(async (value) => {
+          await this.plugin.updateSetting("autoStart", value);
+        })
+      );
+
+    // Port number used for HTTP or HTTPS
     new Setting(containerEl)
       .setName("Port")
       .setDesc("Port for HTTP or HTTPS.")
@@ -54,6 +87,7 @@ export class LocalWebServerSettingTab extends PluginSettingTab {
           })
       );
 
+    // Bind address - use 127.0.0.1 for localhost only, or 0.0.0.0 for LAN.
     new Setting(containerEl)
       .setName("Bind address")
       .setDesc("Use 127.0.0.1 for localhost only, or 0.0.0.0 for LAN.")
@@ -68,9 +102,10 @@ export class LocalWebServerSettingTab extends PluginSettingTab {
           })
       );
 
+    // Use HTTPS (TLS) - serve over TLS using PEM certificate and key files stored in the Obsidian vault.
     new Setting(containerEl)
       .setName("Use HTTPS (TLS)")
-      .setDesc("Serve over TLS using PEM certificate and key files stored in your vault.")
+      .setDesc("Serve over TLS using PEM certificate and key files stored in your Obsidian Vault.")
       .addToggle((toggle) =>
         toggle.setValue(this.plugin.settings.useHttps).onChange(async (value) => {
           await this.plugin.updateSetting("useHttps", value);
@@ -80,9 +115,10 @@ export class LocalWebServerSettingTab extends PluginSettingTab {
 
     const httpsOn = this.plugin.settings.useHttps;
 
+    // HTTPS certificate path - vault-relative path to the PEM certificate (e.g. .certs/cert.pem).
     new Setting(containerEl)
       .setName("HTTPS certificate path")
-      .setDesc("Vault-relative path to the PEM certificate (e.g. ssl/cert.pem).")
+      .setDesc("Vault-relative path to the PEM certificate (e.g. .certs/cert.pem).")
       .addText((text) =>
         text
           .setPlaceholder("folder/cert.pem")
@@ -93,9 +129,11 @@ export class LocalWebServerSettingTab extends PluginSettingTab {
           })
       );
 
+
+    // HTTPS private key path - vault-relative path to the PEM private key (e.g. .certs/key.pem).  
     new Setting(containerEl)
       .setName("HTTPS private key path")
-      .setDesc("Vault-relative path to the PEM private key (e.g. ssl/key.pem).")
+      .setDesc("Vault-relative path to the PEM private key (e.g. .certs/key.pem).")
       .addText((text) =>
         text
           .setPlaceholder("folder/key.pem")
@@ -106,35 +144,7 @@ export class LocalWebServerSettingTab extends PluginSettingTab {
           })
       );
 
-    new Setting(containerEl)
-      .setName("Vault name")
-      .setDesc('Title shown in the LAN sidebar. Leave blank to use "Obsidian Vault".')
-      .addText((text) =>
-        text
-          .setPlaceholder("Obsidian Vault")
-          .setValue(this.plugin.settings.vaultName)
-          .onChange(async (value) => {
-            await this.plugin.updateSetting("vaultName", value);
-          })
-      );
-
-    new Setting(containerEl)
-      .setName("Root folder")
-      .setDesc("Only this folder is served on the web. Relative path in vault; empty means whole vault.")
-      .addText((text) =>
-        text.setValue(this.plugin.settings.rootFolder).onChange(async (value) => {
-          await this.plugin.updateSetting("rootFolder", value);
-        })
-      );
-
-    new Setting(containerEl)
-      .setName("Auto-start on launch")
-      .addToggle((toggle) =>
-        toggle.setValue(this.plugin.settings.autoStart).onChange(async (value) => {
-          await this.plugin.updateSetting("autoStart", value);
-        })
-      );
-
+    // Enable basic auth - require username/password for all web requests.
     new Setting(containerEl)
       .setName("Enable basic auth")
       .setDesc("Require username/password for all web requests.")
@@ -145,6 +155,7 @@ export class LocalWebServerSettingTab extends PluginSettingTab {
         })
       );
 
+    // Username - username for basic authentication.
     new Setting(containerEl)
       .setName("Username")
       .addText((text) =>
@@ -157,6 +168,7 @@ export class LocalWebServerSettingTab extends PluginSettingTab {
           })
       );
 
+    // Password - password for basic authentication.
     new Setting(containerEl)
       .setName("Password")
       .addText((text) =>
@@ -169,6 +181,7 @@ export class LocalWebServerSettingTab extends PluginSettingTab {
           })
       );
 
+    // Theme - theme for rendered pages.
     new Setting(containerEl)
       .setName("Theme")
       .setDesc("Theme for rendered pages.")

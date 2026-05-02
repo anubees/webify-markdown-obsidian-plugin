@@ -15,10 +15,26 @@
 
 ## Screenshots / Demo
 
-- Add screenshots or GIFs here before submission:
-  - `docs/screenshot-sidebar.png`
-  - `docs/screenshot-note-view.png`
-  - `docs/screenshot-mobile.png`
+
+### Obsidian Plugin Settings Main Panel Preview
+
+![Obsidian plugin settings - main panel](screenshots/Obsidian-plugin-settings-main-panel.png)
+
+### Webify Plugin All Settings Preview
+
+![Webify Obsidian Markdown plugin settings](screenshots/webify-obsidian-md-plugin-settings.png)
+
+### Upon Launch in Web browser
+
+![Launch](screenshots/Launch.png)
+
+### Full note view in Web browser
+
+![Markdown file on web](screenshots/Markdown-file-on-web.png)
+
+### Sidebar with folder structure
+
+![Sidebar](screenshots/Sidebar.png)
 
 ## Install
 
@@ -163,7 +179,7 @@ TLS **encrypts traffic on the wire**; it does **not** replace sensible access co
 ## Release Checklist (Community Submission)
 
 - [ ] `manifest.json` metadata is final (id/name/version/author URLs).
-- [ ] `README.md` includes screenshots/GIFs and security notes.
+- [ ] `README.md` includes screenshots/GIFs (see `screenshots/`) and security notes.
 - [ ] `LICENSE` is present.
 - [ ] Build artifacts are generated (`main.js`, `manifest.json`, `styles.css`).
 - [ ] Tested on desktop Obsidian with clean startup and shutdown.
