@@ -29,6 +29,10 @@
    - `npm run build`
 2. Copy plugin files into:
    - `<your-vault>/.obsidian/plugins/webify-markdown-lan-server/`
+      - The plugin files look like these:
+         - `main.js`
+         - `manifest.json`
+         - `styles.css`
 3. In Obsidian:
    - Open **Settings > Community plugins**
    - Disable **Restricted mode**
@@ -37,6 +41,7 @@
 ### Option 2: BRAT
 
 1. Install and enable BRAT.
+   - BRAT is Beta Reviewers Auto-update Tool — an Obsidian Community plugin that installs and updates other plugins directly from a GitHub repo (or a specific release), instead of waiting for them to appear in the official Community plugins catalog.
 2. Add repository: `https://github.com/anubees/webify-markdown-lan-server`
 3. Enable **Webify Markdown LAN Server** in Community plugins.
 
@@ -54,6 +59,8 @@
    - `Webify Markdown LAN Server: Copy LAN URL to clipboard`
 4. Open on another device:
    - **`http://...`** by default, or **`https://...`** when HTTPS is enabled.
+
+If it works on the Obsidian PC but not on other devices on the LAN, see **[Troubleshooting LAN remote access](#troubleshooting-lan-remote-access)** (at the bottom of this file).
 
 ## HTTPS (TLS)
 
@@ -74,6 +81,8 @@ The copied URL and status bar use `https://` when HTTPS is on. Private keys **mu
 - **Wrong IP (`…255`):** On many networks (e.g. `192.168.0.x` with a normal mask), **`x.255` is the subnet broadcast address**, not your PC. The site will not load there. Run `ipconfig` on the computer that hosts Obsidian and use that machine’s **IPv4 Address** (often something like `192.168.0.37`), or run **Copy LAN URL to clipboard** so the plugin inserts the detected IP.
 - **HTTP vs HTTPS:** If HTTPS is disabled in settings, **`https://` URLs will not work** — use **`http://`**, or turn on TLS and restart the server. When TLS is active, the status bar shows **`https`** next to the port.
 - **PEM paths:** Paths are **vault-relative** (forward slashes are fine). If the cert or key is missing or unreadable, Obsidian shows a Notice starting with `HTTPS:` and the server stays off until you fix the paths and restart.
+
+For **firewall, bind address, and inbound rule profiles vs `NetworkCategory`** when other devices cannot connect: see **[Troubleshooting LAN remote access](#troubleshooting-lan-remote-access)** at the end of this README.
 
 ### Self-signed certificate (quick, LAN-friendly)
 
@@ -125,11 +134,6 @@ openssl req -x509 -newkey rsa:2048 -nodes -sha256 -keyout key.pem -out cert.pem 
 
 (OpenSSL 3 on Windows often supports `-addext`. If yours errors on `-addext`, search for **OpenSSL SAN config file** examples and generate the cert using a short config.)
 
-
-
-
-
-
 ### Trusting the site in the browser
 
 Self-signed certs are normal for home LAN setups. Expect a browser warning until you proceed once (“Advanced → continue”) or install a trusted local CA. For smoother local trust across devices, tools like **[mkcert](https://github.com/FiloSottile/mkcert)** can mint locally trusted certs (advanced setup).
@@ -163,3 +167,65 @@ TLS **encrypts traffic on the wire**; it does **not** replace sensible access co
 - [ ] `LICENSE` is present.
 - [ ] Build artifacts are generated (`main.js`, `manifest.json`, `styles.css`).
 - [ ] Tested on desktop Obsidian with clean startup and shutdown.
+
+## Troubleshooting LAN remote access
+
+Use this section when the site works in the browser **on the Obsidian PC** (e.g. `http://127.0.0.1:<port>` or its own LAN IP) but **not from another machine** on the network.
+
+Check these in order:
+
+### 1. Bind address must allow the LAN
+
+In plugin settings, **Bind address** should be **`0.0.0.0`** if you expect other devices to connect. **`127.0.0.1`** only listens on localhost, so remote machines cannot reach the server.
+
+### 2. Windows Firewall: inbound port rule
+
+Windows often blocks **incoming** connections to arbitrary ports unless you allow them.
+
+Create an **Inbound Rule** for **TCP** on **the port you configured** (e.g. `9000`):
+
+1. Open **Windows Security** → **Firewall & network protection** → **Advanced settings**.
+2. **Inbound Rules** → **New Rule…** → **Port** → TCP → specific local ports = your plugin port → **Allow the connection**.
+3. On the **Profile** step, tick the firewall profiles that apply to **how Windows categorizes your current network** (see below). Finish and name the rule (e.g. `Obsidian Webify LAN TCP 9000`).
+
+If Obsidian prompts “Allow access?” when the server starts, choose **networks you trust**; denying or restricting to the wrong profile has the same effect as a mismatched rule.
+
+### 3. Rule profiles must match `NetworkCategory` (common gotcha)
+
+A rule that only applies to **Private** is **ignored** when Windows treats your adapter as **Public** (and vice versa). Symptoms look like “firewall rule exists but nobody can connect from LAN.”
+
+In **PowerShell** (run as a normal user is fine):
+
+```powershell
+Get-NetConnectionProfile
+```
+
+Note **InterfaceAlias** (e.g. `Wi‑Fi`), **InterfaceIndex**, **IPv4Connectivity**, and **NetworkCategory** (`Private`, `Public`, or `Domain`).
+
+If **`Get-NetConnectionProfile` shows `NetworkCategory : Public`** for the interface you use, but your inbound firewall rule only allows **Private**, either extend the rule’s profiles or—on a **trusted** network—change the category to **Private** so those rules apply.
+
+In **PowerShell** (Administrator may be required, depending on machine policy):
+
+```powershell
+Set-NetConnectionProfile -InterfaceIndex <InterfaceIndex> -NetworkCategory Private
+```
+
+Replace `<InterfaceIndex>` with the **InterfaceIndex** number from the **`Get-NetConnectionProfile`** line for that connection (not the alias name). You can also set the network to Private from **Settings → Network & internet** for that Wi‑Fi/Ethernet.
+
+Open your inbound rule → **Protocols and Ports** (verify TCP + port), then tab **Advanced** (or Properties → **Advanced**) → **Profiles**: the combination here must cover the **same** categories your NIC actually uses (`Get-NetConnectionProfile`). For example, if **`NetworkCategory` is Public** but only **Private** is checked on the rule, inbound traffic **from other machines may still be dropped**.
+
+Mitigations:
+
+- Edit the inbound rule so the **Profiles** checkbox list matches reality (least privilege: prefer **Private** on home Wi‑Fi and set that network’s category to Private—via **`Set-NetConnectionProfile`** or **Settings → Network & internet**—instead of blindly enabling **Public** on the rule).
+
+### 4. Still stuck?
+
+From the **remote** PC, replace host and port as needed:
+
+```powershell
+Test-NetConnection -ComputerName <Obsidian-PC-LAN-IP> -Port <plugin-port>
+```
+
+**`TcpTestSucceeded : False`** usually means firewall, VPN, isolated guest Wi‑Fi, wrong IP, or bind address—not the plugin markup layer. **`True`** but the browser fails points at URL scheme (`http` vs `https`) or TLS/certificate prompts.
+
+For HTTPS-only cases (broadcast IP `.255`, PEM paths, scheme mismatch): see **[HTTPS (TLS)](#https-tls)** → **Troubleshooting**.
