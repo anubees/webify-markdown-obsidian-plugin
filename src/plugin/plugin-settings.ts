@@ -10,6 +10,9 @@ function isThemeOption(value: string): value is ThemeOption {
 export const DEFAULT_SETTINGS: ILocalWebServerSettings = {
   port: 9000,
   bindAddress: "0.0.0.0",
+  useHttps: false,
+  httpsCertPath: "",
+  httpsKeyPath: "",
   vaultName: "",
   rootFolder: "",
   autoStart: false,
@@ -39,7 +42,7 @@ export class LocalWebServerSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("Port")
-      .setDesc("HTTP port for the local server.")
+      .setDesc("Port for HTTP or HTTPS.")
       .addText((text) =>
         text
           .setPlaceholder("9000")
@@ -62,6 +65,44 @@ export class LocalWebServerSettingTab extends PluginSettingTab {
           .onChange(async (value: string) => {
             if (value !== "127.0.0.1" && value !== "0.0.0.0") return;
             await this.plugin.updateSetting("bindAddress", value);
+          })
+      );
+
+    new Setting(containerEl)
+      .setName("Use HTTPS (TLS)")
+      .setDesc("Serve over TLS using PEM certificate and key files stored in your vault.")
+      .addToggle((toggle) =>
+        toggle.setValue(this.plugin.settings.useHttps).onChange(async (value) => {
+          await this.plugin.updateSetting("useHttps", value);
+          this.display();
+        })
+      );
+
+    const httpsOn = this.plugin.settings.useHttps;
+
+    new Setting(containerEl)
+      .setName("HTTPS certificate path")
+      .setDesc("Vault-relative path to the PEM certificate (e.g. ssl/cert.pem).")
+      .addText((text) =>
+        text
+          .setPlaceholder("folder/cert.pem")
+          .setValue(this.plugin.settings.httpsCertPath)
+          .setDisabled(!httpsOn)
+          .onChange(async (value) => {
+            await this.plugin.updateSetting("httpsCertPath", value.trim());
+          })
+      );
+
+    new Setting(containerEl)
+      .setName("HTTPS private key path")
+      .setDesc("Vault-relative path to the PEM private key (e.g. ssl/key.pem).")
+      .addText((text) =>
+        text
+          .setPlaceholder("folder/key.pem")
+          .setValue(this.plugin.settings.httpsKeyPath)
+          .setDisabled(!httpsOn)
+          .onChange(async (value) => {
+            await this.plugin.updateSetting("httpsKeyPath", value.trim());
           })
       );
 

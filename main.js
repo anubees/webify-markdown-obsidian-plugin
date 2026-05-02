@@ -51860,6 +51860,9 @@ function isThemeOption(value) {
 var DEFAULT_SETTINGS = {
   port: 9e3,
   bindAddress: "0.0.0.0",
+  useHttps: false,
+  httpsCertPath: "",
+  httpsKeyPath: "",
   vaultName: "",
   rootFolder: "",
   autoStart: false,
@@ -51881,7 +51884,7 @@ var LocalWebServerSettingTab = class extends import_obsidian2.PluginSettingTab {
     containerEl.createEl("p", {
       text: "Credentials are stored in plugin data and are plaintext at rest in this version of the plugin. Use only on trusted devices."
     });
-    new import_obsidian2.Setting(containerEl).setName("Port").setDesc("HTTP port for the local server.").addText(
+    new import_obsidian2.Setting(containerEl).setName("Port").setDesc("Port for HTTP or HTTPS.").addText(
       (text) => text.setPlaceholder("9000").setValue(String(this.plugin.settings.port)).onChange(async (value) => {
         const parsed = Number(value);
         if (!Number.isInteger(parsed) || parsed < 1 || parsed > 65535) return;
@@ -51892,6 +51895,23 @@ var LocalWebServerSettingTab = class extends import_obsidian2.PluginSettingTab {
       (dropdown) => dropdown.addOption("127.0.0.1", "127.0.0.1 (localhost only)").addOption("0.0.0.0", "0.0.0.0 (LAN)").setValue(this.plugin.settings.bindAddress).onChange(async (value) => {
         if (value !== "127.0.0.1" && value !== "0.0.0.0") return;
         await this.plugin.updateSetting("bindAddress", value);
+      })
+    );
+    new import_obsidian2.Setting(containerEl).setName("Use HTTPS (TLS)").setDesc("Serve over TLS using PEM certificate and key files stored in your vault.").addToggle(
+      (toggle) => toggle.setValue(this.plugin.settings.useHttps).onChange(async (value) => {
+        await this.plugin.updateSetting("useHttps", value);
+        this.display();
+      })
+    );
+    const httpsOn = this.plugin.settings.useHttps;
+    new import_obsidian2.Setting(containerEl).setName("HTTPS certificate path").setDesc("Vault-relative path to the PEM certificate (e.g. ssl/cert.pem).").addText(
+      (text) => text.setPlaceholder("folder/cert.pem").setValue(this.plugin.settings.httpsCertPath).setDisabled(!httpsOn).onChange(async (value) => {
+        await this.plugin.updateSetting("httpsCertPath", value.trim());
+      })
+    );
+    new import_obsidian2.Setting(containerEl).setName("HTTPS private key path").setDesc("Vault-relative path to the PEM private key (e.g. ssl/key.pem).").addText(
+      (text) => text.setPlaceholder("folder/key.pem").setValue(this.plugin.settings.httpsKeyPath).setDisabled(!httpsOn).onChange(async (value) => {
+        await this.plugin.updateSetting("httpsKeyPath", value.trim());
       })
     );
     new import_obsidian2.Setting(containerEl).setName("Vault name").setDesc('Title shown in the LAN sidebar. Leave blank to use "Obsidian Vault".').addText(
@@ -51936,6 +51956,7 @@ var LocalWebServerSettingTab = class extends import_obsidian2.PluginSettingTab {
 
 // src/services/wmpls-http-server-service.ts
 var http = __toESM(require("http"));
+var https = __toESM(require("https"));
 
 // src/services/wmpls-http-handlers.ts
 var fs5 = __toESM(require("fs"));
@@ -52688,6 +52709,11 @@ function normalizeRootFolder(raw) {
 function getRootAbsolutePath(vaultBase, rootFolder) {
   if (!rootFolder) return vaultBase;
   return path.resolve(vaultBase, rootFolder);
+}
+function resolveVaultRelativePath(vaultBase, vaultRelative) {
+  const normalized = normalizeRootFolder(vaultRelative);
+  if (!normalized) return null;
+  return safeResolveWithinRoot(vaultBase, normalized);
 }
 function safeResolveWithinRoot(rootAbsolutePath, requestedPath) {
   const sanitized = requestedPath.replace(/\\/g, "/").replace(/^\/+/, "");
@@ -55576,7 +55602,7 @@ async function handleNoteRoute(res, options2, requestedRelative) {
 // src/services/wmpls-http-server-service.ts
 var WmplsHttpServerService = class {
   static async startWebServer(options2) {
-    const server = http.createServer((req, res) => {
+    const onRequest = (req, res) => {
       void handleRequest(req, res, options2).catch((error) => {
         console.error("Webify Markdown LAN Server request error:", error);
         if (!res.headersSent) {
@@ -55585,7 +55611,14 @@ var WmplsHttpServerService = class {
         }
         res.end();
       });
-    });
+    };
+    const server = options2.httpsCredentials ? https.createServer(
+      {
+        cert: options2.httpsCredentials.cert,
+        key: options2.httpsCredentials.key
+      },
+      onRequest
+    ) : http.createServer(onRequest);
     await new Promise((resolve5, reject) => {
       server.once("error", reject);
       server.listen(options2.settings.port, options2.settings.bindAddress, () => {
@@ -55604,6 +55637,7 @@ var WmplsHttpServerService = class {
 };
 
 // src/plugin/local-web-server-plugin.ts
+var fs6 = __toESM(require("fs"));
 var LocalWebServerPlugin = class extends import_obsidian3.Plugin {
   constructor() {
     super(...arguments);
@@ -55627,7 +55661,7 @@ var LocalWebServerPlugin = class extends import_obsidian3.Plugin {
     const oldValue = this.settings[key];
     this.settings[key] = value;
     await this.saveSettings();
-    if (this.runningServer && (key === "port" || key === "bindAddress" || key === "rootFolder" || key === "enableBasicAuth" || key === "authUsername" || key === "authPassword" || key === "theme")) {
+    if (this.runningServer && (key === "port" || key === "bindAddress" || key === "rootFolder" || key === "enableBasicAuth" || key === "authUsername" || key === "authPassword" || key === "theme" || key === "useHttps" || key === "httpsCertPath" || key === "httpsKeyPath")) {
       await this.restartServerWithNotice("Webify Markdown LAN Server restarted to apply updated settings.");
     } else if (oldValue !== value) {
       this.updateStatusBar();
@@ -55666,10 +55700,36 @@ var LocalWebServerPlugin = class extends import_obsidian3.Plugin {
     const vaultBasePath = getVaultBasePath(this.app.vault);
     const normalizedRoot = normalizeRootFolder(this.settings.rootFolder);
     const rootAbsolutePath = getRootAbsolutePath(vaultBasePath, normalizedRoot);
+    let httpsCredentials;
+    if (this.settings.useHttps) {
+      const certResolved = resolveVaultRelativePath(vaultBasePath, this.settings.httpsCertPath);
+      const keyResolved = resolveVaultRelativePath(vaultBasePath, this.settings.httpsKeyPath);
+      if (!certResolved || !keyResolved) {
+        new import_obsidian3.Notice(
+          "HTTPS enabled: enter vault-relative paths to PEM certificate and private key files."
+        );
+        return;
+      }
+      if (!await fileExists(certResolved) || !await fileExists(keyResolved)) {
+        new import_obsidian3.Notice("HTTPS: certificate or key file not found under the vault path.");
+        return;
+      }
+      try {
+        const [cert, key] = await Promise.all([
+          fs6.promises.readFile(certResolved, "utf8"),
+          fs6.promises.readFile(keyResolved, "utf8")
+        ]);
+        httpsCredentials = { cert, key };
+      } catch {
+        new import_obsidian3.Notice("HTTPS: failed to read certificate or key file.");
+        return;
+      }
+    }
     try {
       this.runningServer = await WmplsHttpServerService.startWebServer({
         settings: this.settings,
         rootAbsolutePath,
+        httpsCredentials,
         getFavoritePaths: () => this.settings.favoritePaths,
         toggleFavoritePath: async (relativePath) => this.toggleFavoritePath(relativePath)
       });
@@ -55734,7 +55794,8 @@ var LocalWebServerPlugin = class extends import_obsidian3.Plugin {
   // Updates the status bar
   updateStatusBar() {
     if (this.runningServer) {
-      this.statusBar.setText(`\u25CF Running on :${this.settings.port}`);
+      const scheme = this.settings.useHttps ? "https" : "http";
+      this.statusBar.setText(`\u25CF ${scheme} :${this.settings.port}`);
       this.statusBar.setAttr("aria-label", this.getServerUrl());
     } else {
       this.statusBar.setText("\u25CB Stopped");
@@ -55744,7 +55805,8 @@ var LocalWebServerPlugin = class extends import_obsidian3.Plugin {
   // Gets the server URL
   getServerUrl() {
     const host = this.settings.bindAddress === "127.0.0.1" ? "127.0.0.1" : this.getLanIp();
-    return `http://${host}:${this.settings.port}`;
+    const scheme = this.settings.useHttps ? "https" : "http";
+    return `${scheme}://${host}:${this.settings.port}`;
   }
   // Gets the LAN IP address
   getLanIp() {

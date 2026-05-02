@@ -8,7 +8,14 @@ import { LocalWebServerSettingTab, DEFAULT_SETTINGS } from "./plugin-settings";
 import type { ILocalWebServerSettings } from "../interfaces/i-local-web-server-settings";
 import type { IRunningServer } from "../interfaces/i-running-server";
 import { WmplsHttpServerService } from "../services/wmpls-http-server-service";
-import { getRootAbsolutePath, getVaultBasePath, normalizeRootFolder } from "../utils";
+import {
+  fileExists,
+  getRootAbsolutePath,
+  getVaultBasePath,
+  normalizeRootFolder,
+  resolveVaultRelativePath
+} from "../utils";
+import * as fs from "fs";
 // #endregion << Imports >>
 
 // The main plugin class for the Local Web Server plugin
@@ -47,7 +54,10 @@ export default class LocalWebServerPlugin extends Plugin {
         key === "enableBasicAuth" ||
         key === "authUsername" ||
         key === "authPassword" ||
-        key === "theme")
+        key === "theme" ||
+        key === "useHttps" ||
+        key === "httpsCertPath" ||
+        key === "httpsKeyPath")
     ) {
       await this.restartServerWithNotice("Webify Markdown LAN Server restarted to apply updated settings.");
     } else if (oldValue !== value) {
@@ -97,10 +107,38 @@ export default class LocalWebServerPlugin extends Plugin {
     const vaultBasePath = getVaultBasePath(this.app.vault);
     const normalizedRoot = normalizeRootFolder(this.settings.rootFolder);
     const rootAbsolutePath = getRootAbsolutePath(vaultBasePath, normalizedRoot);
+
+    let httpsCredentials: { cert: string; key: string } | undefined;
+    if (this.settings.useHttps) {
+      const certResolved = resolveVaultRelativePath(vaultBasePath, this.settings.httpsCertPath);
+      const keyResolved = resolveVaultRelativePath(vaultBasePath, this.settings.httpsKeyPath);
+      if (!certResolved || !keyResolved) {
+        new Notice(
+          "HTTPS enabled: enter vault-relative paths to PEM certificate and private key files."
+        );
+        return;
+      }
+      if (!(await fileExists(certResolved)) || !(await fileExists(keyResolved))) {
+        new Notice("HTTPS: certificate or key file not found under the vault path.");
+        return;
+      }
+      try {
+        const [cert, key] = await Promise.all([
+          fs.promises.readFile(certResolved, "utf8"),
+          fs.promises.readFile(keyResolved, "utf8")
+        ]);
+        httpsCredentials = { cert, key };
+      } catch {
+        new Notice("HTTPS: failed to read certificate or key file.");
+        return;
+      }
+    }
+
     try {
       this.runningServer = await WmplsHttpServerService.startWebServer({
         settings: this.settings,
         rootAbsolutePath,
+        httpsCredentials,
         getFavoritePaths: () => this.settings.favoritePaths,
         toggleFavoritePath: async (relativePath: string) => this.toggleFavoritePath(relativePath)
       });
@@ -172,7 +210,8 @@ export default class LocalWebServerPlugin extends Plugin {
   // Updates the status bar
   private updateStatusBar(): void {
     if (this.runningServer) {
-      this.statusBar.setText(`● Running on :${this.settings.port}`);
+      const scheme = this.settings.useHttps ? "https" : "http";
+      this.statusBar.setText(`● ${scheme} :${this.settings.port}`);
       this.statusBar.setAttr("aria-label", this.getServerUrl());
     } else {
       this.statusBar.setText("○ Stopped");
@@ -183,7 +222,8 @@ export default class LocalWebServerPlugin extends Plugin {
   // Gets the server URL
   private getServerUrl(): string {
     const host = this.settings.bindAddress === "127.0.0.1" ? "127.0.0.1" : this.getLanIp();
-    return `http://${host}:${this.settings.port}`;
+    const scheme = this.settings.useHttps ? "https" : "http";
+    return `${scheme}://${host}:${this.settings.port}`;
   }
 
   // Gets the LAN IP address

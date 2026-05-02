@@ -62,6 +62,13 @@ export function getRootAbsolutePath(vaultBase: string, rootFolder: string): stri
   return path.resolve(vaultBase, rootFolder);
 }
 
+// Resolves a vault-relative POSIX path against the vault root; rejects traversal outside the vault.
+export function resolveVaultRelativePath(vaultBase: string, vaultRelative: string): string | null {
+  const normalized = normalizeRootFolder(vaultRelative);
+  if (!normalized) return null;
+  return safeResolveWithinRoot(vaultBase, normalized);
+}
+
 // Ensures a request path resolves inside the configured root folder
 export function safeResolveWithinRoot(rootAbsolutePath: string, requestedPath: string): string | null {
   const sanitized = requestedPath.replace(/\\/g, "/").replace(/^\/+/, "");
