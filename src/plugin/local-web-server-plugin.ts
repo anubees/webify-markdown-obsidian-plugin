@@ -59,7 +59,7 @@ export default class LocalWebServerPlugin extends Plugin {
         key === "httpsCertPath" ||
         key === "httpsKeyPath")
     ) {
-      await this.restartServerWithNotice("Webify Markdown LAN Server restarted to apply updated settings.");
+      await this.restartServerWithNotice("Webify Markdown Obsidian Plugin LAN Server restarted to apply updated settings.");
     } else if (oldValue !== value) {
       this.updateStatusBar();
     }
