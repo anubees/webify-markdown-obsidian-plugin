@@ -1,6 +1,6 @@
-# Webify Markdown LAN Server
+# Webify Markdown Obsidian Plugin
 
-`Webify Markdown LAN Server` turns your vault (or a selected subfolder) into a read-only local website that you can browse from devices on the same network.
+`Webify Markdown Obsidian Plugin` turns your vault (or a selected subfolder) into a read-only local website that you can browse from devices on the same network.
 
 ## Features
 
@@ -44,7 +44,7 @@
    - `npm install`
    - `npm run build`
 2. Copy plugin files into:
-   - `<your-vault>/.obsidian/plugins/webify-markdown-lan-server/`
+   - `<your-vault>/.obsidian/plugins/webify-markdown-obsidian-plugin/`
       - The plugin files look like these:
          - `main.js`
          - `manifest.json`
@@ -58,13 +58,13 @@
 
 1. Install and enable BRAT.
    - BRAT is Beta Reviewers Auto-update Tool — an Obsidian Community plugin that installs and updates other plugins directly from a GitHub repo (or a specific release), instead of waiting for them to appear in the official Community plugins catalog.
-2. Add repository: `https://github.com/anubees/webify-markdown-lan-server`
+2. Add repository: `https://github.com/anubees/webify-markdown-obsidian-plugin`
 3. Enable **Webify Markdown LAN Server** in Community plugins.
 
 ## Usage
 
 1. Run command:
-   - `Webify Markdown LAN Server: Start server`
+   - `Webify Markdown Obsidian Plugin: Start server`
 2. Configure settings:
    - Port
    - Bind address (`127.0.0.1` or `0.0.0.0`)
@@ -72,7 +72,7 @@
    - Basic auth (recommended for LAN mode)
    - Optional HTTPS (see [HTTPS (TLS)](#https-tls) below)
 3. Copy URL:
-   - `Webify Markdown LAN Server: Copy LAN URL to clipboard`
+   - `Webify Markdown Obsidian Plugin: Copy LAN URL to clipboard`
 4. Open on another device:
    - **`http://...`** by default, or **`https://...`** when HTTPS is enabled.
 
@@ -171,7 +171,7 @@ TLS **encrypts traffic on the wire**; it does **not** replace sensible access co
    - `npm i`
    - `npm run dev`
 2. Copy/symlink into:
-   - `<vault>/.obsidian/plugins/webify-markdown-lan-server/`
+   - `<vault>/.obsidian/plugins/webify-markdown-obsidian-plugin/`
 3. Enable Developer mode in Obsidian.
 4. Enable plugin and run:
    - `Webify Markdown LAN Server: Start server`
@@ -202,7 +202,7 @@ Create an **Inbound Rule** for **TCP** on **the port you configured** (e.g. `900
 
 1. Open **Windows Security** → **Firewall & network protection** → **Advanced settings**.
 2. **Inbound Rules** → **New Rule…** → **Port** → TCP → specific local ports = your plugin port → **Allow the connection**.
-3. On the **Profile** step, tick the firewall profiles that apply to **how Windows categorizes your current network** (see below). Finish and name the rule (e.g. `Obsidian Webify LAN TCP 9000`).
+3. On the **Profile** step, tick the firewall profiles that apply to **how Windows categorizes your current network** (see below). Finish and name the rule (e.g. `Obsidian Webify Plugin LAN TCP 9000`).
 
 If Obsidian prompts “Allow access?” when the server starts, choose **networks you trust**; denying or restricting to the wrong profile has the same effect as a mismatched rule.
 
