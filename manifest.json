@@ -1,10 +1,10 @@
 {
-  "id": "webify-markdown-lan-server",
-  "name": "Webify Markdown LAN Server",
+  "id": "webify-markdown-obsidian-plugin",
+  "name": "Webify Markdown Obsidian Plugin",
   "version": "1.0.0",
   "minAppVersion": "1.5.0",
   "description": "Serve your vault or a subfolder over your local network as a read-only website.",
-  "author": "Webify Markdown LAN Server Contributors",
-  "authorUrl": "https://github.com/anubees/webify-markdown-lan-server",
+  "author": "Webify Markdown Obsidian Plugin Contributors",
+  "authorUrl": "https://github.com/anubees/webify-markdown-obsidian-plugin",
   "isDesktopOnly": true
 }
